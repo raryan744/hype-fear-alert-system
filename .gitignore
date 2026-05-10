@@ -1,0 +1,11 @@
+.env
+*.log
+*.db
+__pycache__/
+*.pyc
+backtest_results/
+browsed_files/
+alert_history.json
+config.json
+*.png
+trading_data*.db
