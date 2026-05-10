@@ -53,7 +53,9 @@ def fetch_headlines(ticker: str, max_items: int = 15) -> List[str]:
         news = t.news or []
         headlines = []
         for item in news[:max_items]:
-            title = item.get("title", "")
+            # yfinance ≥0.2.50 nests content; older versions had flat title key
+            content = item.get("content", item)
+            title = content.get("title", "") or item.get("title", "")
             if title:
                 headlines.append(title)
         return headlines
