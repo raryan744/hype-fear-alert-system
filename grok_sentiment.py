@@ -68,7 +68,7 @@ def fetch_headlines(ticker: str, max_items: int = 15) -> List[str]:
 # Grok scoring
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT_BASE = """\
 You are a financial sentiment analyst. Given a list of news headlines about a stock or crypto asset, \
 output a single JSON object with these fields:
   "score"     : float from -1.0 (extreme fear/bearish) to +1.0 (extreme hype/bullish)
@@ -76,6 +76,18 @@ output a single JSON object with these fields:
   "summary"   : one sentence explaining the dominant sentiment driver
 
 Only return valid JSON. No markdown, no explanation outside the JSON."""
+
+
+def _build_system_prompt() -> str:
+    """Inject Obsidian vault context into the Grok system prompt if available."""
+    try:
+        from obsidian_logger import load_vault_context
+        vault_ctx = load_vault_context()
+        if vault_ctx:
+            return _SYSTEM_PROMPT_BASE + "\n\n" + vault_ctx
+    except Exception:
+        pass
+    return _SYSTEM_PROMPT_BASE
 
 
 def score_headlines_with_grok(ticker: str, headlines: List[str]) -> Dict:
@@ -96,7 +108,7 @@ def score_headlines_with_grok(ticker: str, headlines: List[str]) -> Dict:
         resp = client.chat.completions.create(
             model=GROK_MODEL,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": _build_system_prompt()},
                 {"role": "user",   "content": user_msg},
             ],
             temperature=0.1,

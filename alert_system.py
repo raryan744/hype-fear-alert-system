@@ -27,6 +27,7 @@ import requests
 import yfinance as yf
 
 from grok_sentiment import get_live_sentiment, format_sentiment_message
+from obsidian_logger import log_sentiment_scan, log_alert, log_session_summary, ensure_daily_note
 
 logging.basicConfig(
     level=logging.INFO,
@@ -278,11 +279,14 @@ class AlertEngine:
 
         grok_results = get_live_sentiment_batch(watchlist, delay_secs=0.3)
 
+        all_scores   = {}
         alerts_fired = []
+
         for ticker in watchlist:
             profile = self.profiles.get(ticker, {})
             grok    = grok_results.get(ticker, {"score": 0.0, "confidence": 0.0, "summary": ""})
             scores  = compute_composite_score(ticker, profile, grok)
+            all_scores[ticker] = scores
 
             logger.info(
                 f"{ticker:10s} composite={scores['composite']:+.3f} "
@@ -291,10 +295,15 @@ class AlertEngine:
 
             alert_msg = self.evaluate(ticker, scores)
             if alert_msg:
+                direction = "HYPE" if scores["composite"] > 0 else "FEAR"
                 logger.info(f"ALERT: {ticker}")
                 send_telegram(alert_msg)
+                log_alert(ticker, direction, scores, alert_msg)
                 alerts_fired.append(alert_msg)
                 self.alert_history.append({"ticker": ticker, "scores": scores, "msg": alert_msg})
+
+        # Log full scan to Obsidian daily note
+        log_sentiment_scan(all_scores)
 
         return alerts_fired
 
@@ -305,18 +314,31 @@ class AlertEngine:
 
 def main():
     logger.info("Hype-Fear Alert System v4 starting...")
-    engine = AlertEngine()
-
+    ensure_daily_note()
+    engine     = AlertEngine()
     scan_count = 0
+    all_alerts = []
+
     while True:
         scan_count += 1
         logger.info(f"=== Scan #{scan_count} — {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')} ===")
 
         try:
             alerts = engine.run_scan(WATCHLIST)
+            all_alerts.extend(alerts)
             logger.info(f"Scan complete — {len(alerts)} alert(s) fired")
         except Exception as e:
             logger.error(f"Scan error: {e}")
+
+        # Write session summary every 12 scans (~1 hour)
+        if scan_count % 12 == 0:
+            top = sorted(
+                engine.alert_history[-12:],
+                key=lambda x: abs(x["scores"].get("composite", 0)),
+                reverse=True
+            )
+            log_session_summary(scan_count, len(all_alerts),
+                                [x["ticker"] for x in top[:3]])
 
         logger.info(f"Sleeping {SCAN_INTERVAL_SECS}s until next scan...")
         time.sleep(SCAN_INTERVAL_SECS)
