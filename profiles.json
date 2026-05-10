@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-{"TSLA": {... full from local}, ...}
-=======
 {
   "TSLA": {
     "industry": "Auto Manufacturers",
@@ -171,4 +168,3 @@
     "notes": "ProShares UltraPro QQQ (3x leveraged). Extreme sensitivity to tech hype, volatility, and market regime changes."
   }
 }
->>>>>>> aeb3714 (Add core Python scripts: alert_system.py (main v4), backtest_engine.py, trading_system_v5.py)
