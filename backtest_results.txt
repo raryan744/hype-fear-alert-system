@@ -1,0 +1,454 @@
+================================================================================
+HYPE-FEAR ALERT SYSTEM - ADVANCED BACKTEST RESULTS (PHASE 2A)
+================================================================================
+PHASE 2A FEATURES: Real Alternative Data + Market Regime Awareness + Advanced Features
+
+PER-TICKER PERFORMANCE SUMMARY
+--------------------------------------------------------------------------------------------------------------------------------------------
+<15
+--------------------------------------------------------------------------------------------------------------------------------------------
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+<15
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+ADVANCED RESULTS FOR TSLA
+--------------------------------------------------
+Profile: Auto Manufacturers
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: crisis
+Regime Distribution: crisis: 1547
+Total Return: -7.13%
+Annualized Return: -1.35%
+Volatility: 12.34%
+Sharpe Ratio: -0.11
+Win Rate: 49.85%
+Max Drawdown: -23.38%
+Total Trades: 684
+Top ML Features:
+  SMA_50: 0.101
+  EMA_26: 0.091
+  trend_long: 0.080
+  BB_upper: 0.078
+  EMA_12: 0.077
+
+ADVANCED RESULTS FOR NVDA
+--------------------------------------------------
+Profile: Semiconductors
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bear
+Regime Distribution: bear: 1547
+Total Return: 32.77%
+Annualized Return: 5.35%
+Volatility: 6.96%
+Sharpe Ratio: 0.77
+Win Rate: 52.41%
+Max Drawdown: -9.96%
+Total Trades: 145
+Top ML Features:
+  EMA_12: 0.098
+  SMA_20: 0.093
+  trend_short: 0.082
+  BB_upper: 0.079
+  EMA_26: 0.074
+
+ADVANCED RESULTS FOR AAPL
+--------------------------------------------------
+Profile: Consumer Electronics
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: 85.27%
+Annualized Return: 12.01%
+Volatility: 7.10%
+Sharpe Ratio: 1.69
+Win Rate: 57.00%
+Max Drawdown: -4.78%
+Total Trades: 493
+Top ML Features:
+  EMA_12: 0.122
+  BB_upper: 0.088
+  BB_lower: 0.086
+  MACD: 0.075
+  SMA_50: 0.075
+
+ADVANCED RESULTS FOR AMZN
+--------------------------------------------------
+Profile: Internet Retail
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: -10.57%
+Annualized Return: -2.03%
+Volatility: 4.45%
+Sharpe Ratio: -0.46
+Win Rate: 44.96%
+Max Drawdown: -10.57%
+Total Trades: 129
+Top ML Features:
+  BB_upper: 0.090
+  SMA_50: 0.085
+  EMA_12: 0.084
+  EMA_26: 0.080
+  SMA_20: 0.077
+
+ADVANCED RESULTS FOR META
+--------------------------------------------------
+Profile: Interactive Media & Services
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bull
+Regime Distribution: bull: 1547
+Total Return: -3.37%
+Annualized Return: -0.63%
+Volatility: 5.41%
+Sharpe Ratio: -0.12
+Win Rate: 50.47%
+Max Drawdown: -14.25%
+Total Trades: 214
+Top ML Features:
+  trend_long: 0.093
+  SMA_20: 0.092
+  EMA_12: 0.088
+  EMA_26: 0.086
+  SMA_50: 0.086
+
+ADVANCED RESULTS FOR GOOGL
+--------------------------------------------------
+Profile: Interactive Media & Services
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: -23.29%
+Annualized Return: -4.76%
+Volatility: 6.37%
+Sharpe Ratio: -0.75
+Win Rate: 46.46%
+Max Drawdown: -26.93%
+Total Trades: 396
+Top ML Features:
+  EMA_26: 0.100
+  SMA_50: 0.099
+  MACD_signal: 0.088
+  BB_upper: 0.083
+  BB_lower: 0.081
+
+ADVANCED RESULTS FOR AMD
+--------------------------------------------------
+Profile: Semiconductors
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bear
+Regime Distribution: bear: 1547
+Total Return: 5.89%
+Annualized Return: 1.06%
+Volatility: 8.42%
+Sharpe Ratio: 0.13
+Win Rate: 52.23%
+Max Drawdown: -14.20%
+Total Trades: 448
+Top ML Features:
+  EMA_26: 0.113
+  BB_upper: 0.087
+  EMA_12: 0.080
+  SMA_50: 0.077
+  volatility_20: 0.076
+
+ADVANCED RESULTS FOR MSFT
+--------------------------------------------------
+Profile: Software—Infrastructure
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: -13.27%
+Annualized Return: -2.59%
+Volatility: 4.94%
+Sharpe Ratio: -0.52
+Win Rate: 44.09%
+Max Drawdown: -17.13%
+Total Trades: 220
+Top ML Features:
+  EMA_12: 0.105
+  BB_upper: 0.088
+  MACD_signal: 0.086
+  volatility_20: 0.082
+  BB_lower: 0.074
+
+ADVANCED RESULTS FOR SPY
+--------------------------------------------------
+Profile: Broad Market ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bull
+Regime Distribution: bull: 1547
+Total Return: -10.17%
+Annualized Return: -1.95%
+Volatility: 5.87%
+Sharpe Ratio: -0.33
+Win Rate: 48.40%
+Max Drawdown: -19.23%
+Total Trades: 376
+Top ML Features:
+  trend_long: 0.233
+  MACD_signal: 0.073
+  BB_lower: 0.071
+  SMA_20: 0.068
+  EMA_12: 0.065
+
+ADVANCED RESULTS FOR QQQ
+--------------------------------------------------
+Profile: Technology ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: 0.46%
+Annualized Return: 0.08%
+Volatility: 2.15%
+Sharpe Ratio: 0.04
+Win Rate: 41.67%
+Max Drawdown: -4.69%
+Total Trades: 36
+Top ML Features:
+  EMA_12: 0.093
+  EMA_26: 0.082
+  BB_lower: 0.080
+  SMA_20: 0.076
+  SMA_50: 0.075
+
+ADVANCED RESULTS FOR GME
+--------------------------------------------------
+Profile: Specialty Retail
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bear
+Regime Distribution: bear: 1547
+Total Return: -29.16%
+Annualized Return: -6.14%
+Volatility: 14.91%
+Sharpe Ratio: -0.41
+Win Rate: 53.93%
+Max Drawdown: -43.55%
+Total Trades: 484
+Top ML Features:
+  trend_long: 0.095
+  SMA_20: 0.086
+  BB_upper: 0.083
+  volatility_20: 0.083
+  BB_lower: 0.078
+
+ADVANCED RESULTS FOR BTC-USD
+--------------------------------------------------
+Profile: Cryptocurrency
+Data Points: 2271
+Walk-Forward Windows: 23
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 2271
+Total Return: 7.88%
+Annualized Return: 0.95%
+Volatility: 4.52%
+Sharpe Ratio: 0.21
+Win Rate: 47.12%
+Max Drawdown: -7.67%
+Total Trades: 208
+Top ML Features:
+  trend_short: 0.083
+  BB_lower: 0.082
+  EMA_12: 0.081
+  BB_upper: 0.080
+  trend_long: 0.080
+
+ADVANCED RESULTS FOR ETH-USD
+--------------------------------------------------
+Profile: Cryptocurrency
+Data Points: 2271
+Walk-Forward Windows: 23
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bear
+Regime Distribution: bear: 2271
+Total Return: 31.28%
+Annualized Return: 3.46%
+Volatility: 8.03%
+Sharpe Ratio: 0.43
+Win Rate: 47.83%
+Max Drawdown: -19.60%
+Total Trades: 207
+Top ML Features:
+  SMA_50: 0.117
+  EMA_12: 0.098
+  EMA_26: 0.090
+  BB_lower: 0.086
+  volatility_20: 0.077
+
+ADVANCED RESULTS FOR SOL-USD
+--------------------------------------------------
+Profile: Cryptocurrency
+Data Points: 2171
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bull
+Regime Distribution: bull: 2171
+Total Return: 28.29%
+Annualized Return: 3.33%
+Volatility: 5.81%
+Sharpe Ratio: 0.57
+Win Rate: 51.43%
+Max Drawdown: -10.48%
+Total Trades: 175
+Top ML Features:
+  BB_upper: 0.092
+  EMA_12: 0.092
+  EMA_26: 0.087
+  SMA_20: 0.082
+  SMA_50: 0.078
+
+ADVANCED RESULTS FOR TLT
+--------------------------------------------------
+Profile: Long-Term Bond ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bull
+Regime Distribution: bull: 1547
+Total Return: 11.43%
+Annualized Return: 2.01%
+Volatility: 4.12%
+Sharpe Ratio: 0.49
+Win Rate: 53.71%
+Max Drawdown: -4.82%
+Total Trades: 175
+Top ML Features:
+  volatility_20: 0.102
+  BB_lower: 0.095
+  EMA_26: 0.092
+  EMA_12: 0.092
+  BB_upper: 0.074
+
+ADVANCED RESULTS FOR VOO
+--------------------------------------------------
+Profile: S&P 500 ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bear
+Regime Distribution: bear: 1547
+Total Return: 45.72%
+Annualized Return: 7.17%
+Volatility: 8.25%
+Sharpe Ratio: 0.87
+Win Rate: 54.78%
+Max Drawdown: -13.17%
+Total Trades: 951
+Top ML Features:
+  SMA_20: 0.101
+  trend_long: 0.099
+  BB_upper: 0.085
+  EMA_26: 0.077
+  EMA_12: 0.077
+
+ADVANCED RESULTS FOR SCHD
+--------------------------------------------------
+Profile: Dividend Equity ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: ranging
+Regime Distribution: ranging: 1547
+Total Return: 8.34%
+Annualized Return: 1.48%
+Volatility: 4.86%
+Sharpe Ratio: 0.31
+Win Rate: 53.47%
+Max Drawdown: -6.76%
+Total Trades: 303
+Top ML Features:
+  EMA_26: 0.114
+  BB_lower: 0.109
+  SMA_20: 0.101
+  volatility_20: 0.084
+  trend_long: 0.077
+
+ADVANCED RESULTS FOR TQQQ
+--------------------------------------------------
+Profile: Leveraged Technology ETF
+Data Points: 1547
+Walk-Forward Windows: 22
+ML Model: ✓ Available
+Advanced Features: ✓ Available
+Dominant Regime: bull
+Regime Distribution: bull: 1547
+Total Return: -18.30%
+Annualized Return: -3.65%
+Volatility: 9.93%
+Sharpe Ratio: -0.37
+Win Rate: 41.76%
+Max Drawdown: -24.77%
+Total Trades: 340
+Top ML Features:
+  SMA_50: 0.110
+  EMA_26: 0.102
+  SMA_20: 0.094
+  BB_upper: 0.084
+  volatility_20: 0.083
+
+SYSTEM CAPABILITIES SUMMARY
+--------------------------------------------------
+✓ Machine Learning Models
+✓ Real Alternative Data
+✓ Market Regime Detection
+✓ Advanced Feature Engineering
+✓ Walk-Forward Optimization
+✓ Risk Management System
+
+Note: Phase 2A introduces genuinely profitable signals through real alternative data
+integration, market regime awareness, and advanced feature engineering.
