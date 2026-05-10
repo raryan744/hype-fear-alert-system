@@ -1,1 +1,1 @@
-FULL UPDATED OPTIMIZED CODE - see local for full but wait, need actual content
+$(cat /home/workdir/artifacts/backtest_engine.py)
