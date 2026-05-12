@@ -1,0 +1,10 @@
+{
+  "db_path": "/var/data/hype_fear.db",
+  "scan_runs": 1,
+  "scans": 18,
+  "alerts": 3,
+  "outcomes": 0,
+  "win_rate_5d": null,
+  "alerts_last_24h": 3,
+  "generated_at": "2026-05-12T23:12:30.427072"
+}
