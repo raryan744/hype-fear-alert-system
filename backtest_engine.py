@@ -949,8 +949,10 @@ class EnhancedBacktester:
         combined = pd.concat([df['signal'] for df in signals.values()], axis=1, keys=signals.keys())
         combined = combined.fillna(0)
 
-        # Phase 4: Cross-sectional signals - rank assets by signal strength
-        combined['signal_strength'] = combined.abs().mean(axis=1)  # Average absolute signal across assets
+        # Phase 4: Cross-sectional signals - rank assets by signal strength.
+        # Kept as a separate Series so `combined.loc[date]` stays aligned with
+        # the per-asset weights vector below.
+        signal_strength = combined.abs().mean(axis=1)
 
         # Calculate daily returns for each asset
         returns = {}
@@ -985,8 +987,8 @@ class EnhancedBacktester:
                 active_weights /= active_weights.sum()  # Normalize
 
             # Phase 4: High-frequency enhancements - simulate intraday timing (simplified as daily adjustment)
-            strength = combined['signal_strength'].loc[date]
-            if strength > 0.5:
+            strength = signal_strength.loc[date]
+            if strength > 0.5 and active_weights.sum() > 0:
                 active_weights *= 1.2  # Boost allocation for strong cross-sectional signals
                 active_weights /= active_weights.sum()
 
@@ -1033,16 +1035,28 @@ class EnhancedBacktester:
 
         # Summary table
         report_lines.append("PER-TICKER PERFORMANCE SUMMARY")
-        report_lines.append("-" * 140)
-        report_lines.append("<15")
-        report_lines.append("-" * 140)
+        report_lines.append("-" * 110)
+        header = f"{'Ticker':<10} {'Return':>10} {'AnnRet':>10} {'Sharpe':>8} {'WinRate':>8} {'MaxDD':>10} {'Trades':>8} {'Regime':>10} {'ML':>4} {'Adv':>5}"
+        report_lines.append(header)
+        report_lines.append("-" * 110)
 
         for ticker, result in results.items():
             ml_status = "✓" if result.get('ml_available', False) else "✗"
             adv_status = "✓" if result.get('advanced_features', False) else "✗"
-            wf_windows = result.get('walk_forward_windows', 0)
-            dominant_regime = result.get('dominant_regime', 'N/A')
-            report_lines.append("<15")
+            dominant_regime = (result.get('dominant_regime') or 'N/A')[:10]
+            row = (
+                f"{ticker:<10} "
+                f"{result.get('total_return', 0):>9.2%} "
+                f"{result.get('annualized_return', 0):>9.2%} "
+                f"{result.get('sharpe_ratio', 0):>8.2f} "
+                f"{result.get('win_rate', 0):>7.1%} "
+                f"{result.get('max_drawdown', 0):>9.2%} "
+                f"{int(result.get('total_trades', 0)):>8d} "
+                f"{dominant_regime:>10} "
+                f"{ml_status:>4} "
+                f"{adv_status:>5}"
+            )
+            report_lines.append(row)
 
         report_lines.append("-" * 140)
         report_lines.append("")

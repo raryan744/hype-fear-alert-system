@@ -14,11 +14,15 @@ Required env vars:
   POLYGON_API_KEY      — (optional) Polygon for options flow
 """
 
+import argparse
 import json
 import logging
 import os
+import signal
+import sys
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -39,11 +43,27 @@ logger = logging.getLogger(__name__)
 # Config
 # ---------------------------------------------------------------------------
 
-SCAN_INTERVAL_SECS  = 300          # 5 min between full scans
-ALERT_COOLDOWN_SECS = 3600         # 1 hr cooldown per asset per direction
-HYPE_THRESHOLD      = 0.45         # composite score above this → hype alert
-FEAR_THRESHOLD      = -0.45        # composite score below this → fear alert
-CONFIDENCE_MIN      = 0.40         # minimum Grok confidence to fire
+SCAN_INTERVAL_SECS  = int(os.getenv("SCAN_INTERVAL_SECS", 300))   # 5 min between full scans
+ALERT_COOLDOWN_SECS = int(os.getenv("ALERT_COOLDOWN_SECS", 3600)) # 1 hr cooldown per asset per direction
+HYPE_THRESHOLD      = float(os.getenv("HYPE_THRESHOLD", 0.45))
+FEAR_THRESHOLD      = float(os.getenv("FEAR_THRESHOLD", -0.45))
+CONFIDENCE_MIN      = float(os.getenv("CONFIDENCE_MIN", 0.40))
+PRICE_CACHE_TTL     = int(os.getenv("PRICE_CACHE_TTL", 240))      # 4 min — < scan interval
+STATE_DIR           = Path(os.getenv("STATE_DIR", "./state"))
+STATE_DIR.mkdir(parents=True, exist_ok=True)
+COOLDOWN_FILE = STATE_DIR / "cooldown_state.json"
+HISTORY_FILE  = STATE_DIR / "alert_history.json"
+
+# Graceful shutdown flag — set by SIGTERM/SIGINT handler
+_shutdown = False
+
+def _handle_signal(signum, frame):
+    global _shutdown
+    logger.info(f"Received signal {signum} — shutting down gracefully after current scan")
+    _shutdown = True
+
+signal.signal(signal.SIGTERM, _handle_signal)
+signal.signal(signal.SIGINT,  _handle_signal)
 
 WATCHLIST = [
     "TSLA", "NVDA", "AAPL", "AMZN", "META", "GOOGL", "AMD", "MSFT",
@@ -75,6 +95,22 @@ def send_telegram(message: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Price cache — avoid re-downloading 90d of OHLCV every scan
+# ---------------------------------------------------------------------------
+
+_price_cache: Dict[str, Tuple[float, pd.DataFrame]] = {}
+
+def _cached_download(ticker: str, period: str = "90d") -> pd.DataFrame:
+    now = time.time()
+    cached = _price_cache.get(ticker)
+    if cached and (now - cached[0]) < PRICE_CACHE_TTL:
+        return cached[1]
+    df = yf.download(ticker, period=period, interval="1d", progress=False, auto_adjust=True)
+    _price_cache[ticker] = (now, df)
+    return df
+
+
+# ---------------------------------------------------------------------------
 # Technical signal (fast, no ML — for real-time use)
 # ---------------------------------------------------------------------------
 
@@ -85,7 +121,7 @@ def compute_fast_tech_signal(ticker: str) -> Tuple[float, str]:
     regime: 'bull' | 'bear' | 'ranging' | 'crisis'
     """
     try:
-        df = yf.download(ticker, period="90d", interval="1d", progress=False, auto_adjust=True)
+        df = _cached_download(ticker)
         if df.empty or len(df) < 20:
             return 0.0, "unknown"
 
@@ -139,14 +175,18 @@ def compute_fast_tech_signal(ticker: str) -> Tuple[float, str]:
 
         sig = float(np.clip(sig, -1, 1))
 
-        # Regime
+        # Regime — uses asset-relative vol so high-beta names don't permanently
+        # register as 'crisis'. Crisis requires both elevated absolute vol AND
+        # vol above this asset's own 90d high water mark.
         ret20  = (c / close.iloc[-21] - 1) if len(close) > 21 else 0
-        vol20  = close.pct_change().rolling(20).std().iloc[-1] * np.sqrt(252) * 100
+        vol_series = close.pct_change().rolling(20).std() * np.sqrt(252) * 100
+        vol20  = vol_series.iloc[-1]
+        vol_recent_high = vol_series.iloc[-min(90, len(vol_series)):].max() or vol20
+        vol_ratio = vol20 / vol_recent_high if vol_recent_high else 1.0
         ret10  = (c / close.iloc[-11] - 1) if len(close) > 11 else 0
-        ma50v  = sma50.iloc[-1]
         ma200v = close.rolling(min(200, len(close))).mean().iloc[-1]
 
-        if vol20 > 35 or ret10 < -0.10:
+        if (vol20 > 25 and vol_ratio > 0.90) or ret10 < -0.10:
             regime = "crisis"
         elif sma20.iloc[-1] > ma200v and ret20 > 0.02:
             regime = "bull"
@@ -215,8 +255,8 @@ class AlertEngine:
 
     def __init__(self, profiles_path: str = "profiles.json"):
         self.profiles       = self._load_profiles(profiles_path)
-        self.last_alert_ts  = {}   # (ticker, direction) → timestamp
-        self.alert_history  = []
+        self.last_alert_ts  = self._load_cooldown()   # (ticker, direction) → datetime
+        self.alert_history  = self._load_history()
 
     def _load_profiles(self, path: str) -> Dict:
         try:
@@ -225,6 +265,40 @@ class AlertEngine:
         except Exception as e:
             logger.error(f"Could not load profiles: {e}")
             return {}
+
+    def _load_cooldown(self) -> Dict[Tuple[str, str], datetime]:
+        if not COOLDOWN_FILE.exists():
+            return {}
+        try:
+            raw = json.loads(COOLDOWN_FILE.read_text())
+            return {tuple(k.split("|")): datetime.fromisoformat(v) for k, v in raw.items()}
+        except Exception as e:
+            logger.warning(f"Could not load cooldown state: {e}")
+            return {}
+
+    def _save_cooldown(self) -> None:
+        try:
+            serial = {f"{t}|{d}": ts.isoformat() for (t, d), ts in self.last_alert_ts.items()}
+            COOLDOWN_FILE.write_text(json.dumps(serial, indent=2))
+        except Exception as e:
+            logger.warning(f"Could not save cooldown state: {e}")
+
+    def _load_history(self) -> List[Dict]:
+        if not HISTORY_FILE.exists():
+            return []
+        try:
+            data = json.loads(HISTORY_FILE.read_text())
+            # Trim to last 500 entries to keep file small
+            return data[-500:]
+        except Exception as e:
+            logger.warning(f"Could not load alert history: {e}")
+            return []
+
+    def _save_history(self) -> None:
+        try:
+            HISTORY_FILE.write_text(json.dumps(self.alert_history[-500:], indent=2, default=str))
+        except Exception as e:
+            logger.warning(f"Could not save alert history: {e}")
 
     def _in_cooldown(self, ticker: str, direction: str) -> bool:
         key = (ticker, direction)
@@ -235,6 +309,7 @@ class AlertEngine:
 
     def _record_alert(self, ticker: str, direction: str) -> None:
         self.last_alert_ts[(ticker, direction)] = datetime.utcnow()
+        self._save_cooldown()
 
     def evaluate(self, ticker: str, scores: Dict) -> Optional[str]:
         """Return an alert message string if threshold crossed, else None."""
@@ -300,10 +375,21 @@ class AlertEngine:
                 send_telegram(alert_msg)
                 log_alert(ticker, direction, scores, alert_msg)
                 alerts_fired.append(alert_msg)
-                self.alert_history.append({"ticker": ticker, "scores": scores, "msg": alert_msg})
+                self.alert_history.append({
+                    "ticker": ticker,
+                    "scores": scores,
+                    "msg": alert_msg,
+                    "fired_at": datetime.utcnow().isoformat(),
+                })
 
-        # Log full scan to Obsidian daily note
-        log_sentiment_scan(all_scores)
+        if alerts_fired:
+            self._save_history()
+
+        # Log full scan to Obsidian daily note (best-effort)
+        try:
+            log_sentiment_scan(all_scores)
+        except Exception as e:
+            logger.warning(f"Obsidian log failed: {e}")
 
         return alerts_fired
 
@@ -312,14 +398,37 @@ class AlertEngine:
 # Main loop
 # ---------------------------------------------------------------------------
 
-def main():
-    logger.info("Hype-Fear Alert System v4 starting...")
-    ensure_daily_note()
+def run_single_scan(engine: Optional[AlertEngine] = None) -> int:
+    """Execute one scan and return the number of alerts fired. For cron/one-shot use."""
+    engine = engine or AlertEngine()
+    try:
+        ensure_daily_note()
+    except Exception as e:
+        logger.warning(f"ensure_daily_note failed: {e}")
+    alerts = engine.run_scan(WATCHLIST)
+    logger.info(f"Scan complete — {len(alerts)} alert(s) fired")
+    return len(alerts)
+
+
+def _interruptible_sleep(seconds: int) -> None:
+    """Sleep in 1s chunks so SIGTERM is honored quickly."""
+    for _ in range(seconds):
+        if _shutdown:
+            return
+        time.sleep(1)
+
+
+def run_loop() -> None:
+    logger.info("Hype-Fear Alert System starting in loop mode...")
+    try:
+        ensure_daily_note()
+    except Exception as e:
+        logger.warning(f"ensure_daily_note failed: {e}")
     engine     = AlertEngine()
     scan_count = 0
-    all_alerts = []
+    all_alerts: List[str] = []
 
-    while True:
+    while not _shutdown:
         scan_count += 1
         logger.info(f"=== Scan #{scan_count} — {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')} ===")
 
@@ -328,20 +437,39 @@ def main():
             all_alerts.extend(alerts)
             logger.info(f"Scan complete — {len(alerts)} alert(s) fired")
         except Exception as e:
-            logger.error(f"Scan error: {e}")
+            logger.error(f"Scan error: {e}", exc_info=True)
 
         # Write session summary every 12 scans (~1 hour)
-        if scan_count % 12 == 0:
+        if scan_count % 12 == 0 and engine.alert_history:
             top = sorted(
                 engine.alert_history[-12:],
                 key=lambda x: abs(x["scores"].get("composite", 0)),
-                reverse=True
+                reverse=True,
             )
-            log_session_summary(scan_count, len(all_alerts),
-                                [x["ticker"] for x in top[:3]])
+            try:
+                log_session_summary(scan_count, len(all_alerts),
+                                    [x["ticker"] for x in top[:3]])
+            except Exception as e:
+                logger.warning(f"Session summary log failed: {e}")
 
+        if _shutdown:
+            break
         logger.info(f"Sleeping {SCAN_INTERVAL_SECS}s until next scan...")
-        time.sleep(SCAN_INTERVAL_SECS)
+        _interruptible_sleep(SCAN_INTERVAL_SECS)
+
+    logger.info("Shutdown complete.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Hype-Fear Alert System")
+    parser.add_argument("--once", action="store_true",
+                        help="Run a single scan and exit (for cron deploys)")
+    args = parser.parse_args()
+
+    if args.once:
+        run_single_scan()
+        return
+    run_loop()
 
 
 if __name__ == "__main__":

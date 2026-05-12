@@ -9,3 +9,17 @@ alert_history.json
 config.json
 *.png
 trading_data*.db
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local runtime state (cooldown/history JSON — lives on Render disk in prod)
+state/
+
+# Generated backtest output
+backtest_results_*.txt
+backtest_results_*.json
+threshold_suggestions.json
+

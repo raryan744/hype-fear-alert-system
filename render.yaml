@@ -1,0 +1,49 @@
+# Render Infrastructure-as-Code for the Hype-Fear Alert System.
+#
+# Active config: Background Worker on Starter plan ($7/mo).
+# State (cooldown, alert history) is persisted to a 1GB disk at /var/data so
+# duplicate alerts don't fire after restarts/redeploys.
+#
+# Secrets (XAI_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, POLYGON_API_KEY)
+# are NOT defined here. Set them in the Render dashboard so they stay out of git.
+
+services:
+  - type: worker
+    name: hype-fear-worker
+    runtime: python
+    plan: starter            # $7/mo, 512MB RAM — plenty for an 18-ticker poll loop
+    pythonVersion: "3.12"
+    region: oregon            # change to your kalshi-worker region if different
+    buildCommand: pip install -r requirements.txt
+    startCommand: python alert_system.py
+    autoDeploy: true          # redeploy on every push to main
+    envVars:
+      - key: SCAN_INTERVAL_SECS
+        value: "300"
+      - key: ALERT_COOLDOWN_SECS
+        value: "3600"
+      - key: HYPE_THRESHOLD
+        value: "0.45"
+      - key: FEAR_THRESHOLD
+        value: "-0.45"
+      - key: CONFIDENCE_MIN
+        value: "0.40"
+      - key: PRICE_CACHE_TTL
+        value: "240"
+      - key: STATE_DIR
+        value: "/var/data"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Secrets — sync:false means "set in dashboard, don't import from another env group"
+      - key: XAI_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: POLYGON_API_KEY
+        sync: false
+    disk:
+      name: hype-fear-state
+      mountPath: /var/data
+      sizeGB: 1

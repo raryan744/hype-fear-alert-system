@@ -46,6 +46,11 @@ class MarketRegimeClassifier:
 
 
 def _build_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build regime features. Vol is normalised to each asset's own history so
+    that naturally high-beta names (TSLA, crypto) don't get labelled 'crisis'
+    just for being themselves.
+    """
     out = pd.DataFrame(index=df.index)
     close = df['Close']
 
@@ -55,17 +60,25 @@ def _build_features(df: pd.DataFrame) -> pd.DataFrame:
     out['ret10']     = close.pct_change(10)
     out['vol20_ann'] = close.pct_change().rolling(20).std() * np.sqrt(252) * 100
 
+    # Asset-relative vol: how high is current vol vs trailing year for THIS ticker?
+    out['vol_p90_252d'] = out['vol20_ann'].rolling(252, min_periods=60).quantile(0.90)
+    out['vol_ratio']    = out['vol20_ann'] / out['vol_p90_252d']
+
     return out.dropna()
 
 
 def _classify_row(row: pd.Series) -> str:
-    vol   = row['vol20_ann']
-    ret10 = row['ret10']
-    ret20 = row['ret20']
-    ma50  = row['ma50']
-    ma200 = row['ma200']
+    vol       = row['vol20_ann']
+    ret10     = row['ret10']
+    ret20     = row['ret20']
+    ma50      = row['ma50']
+    ma200     = row['ma200']
+    vol_ratio = row.get('vol_ratio', 1.0)
 
-    if vol > 35 or ret10 < -0.10:
+    # Crisis: vol is BOTH high in absolute terms (>25%) AND in the top
+    # decile of this asset's trailing-year history, OR a 10d drawdown >10%.
+    # Old rule used a fixed 35% which fired permanently for TSLA, crypto, GME.
+    if (vol > 25 and vol_ratio > 1.0) or ret10 < -0.10:
         return 'crisis'
     if ma50 > ma200 and ret20 > 0.02:
         return 'bull'
