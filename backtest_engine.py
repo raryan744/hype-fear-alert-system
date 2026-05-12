@@ -977,8 +977,10 @@ class EnhancedBacktester:
         weights = np.array([1.0 / num_assets] * num_assets)
 
         # Apply signals to weights (long only for positive signals)
-        portfolio_returns = pd.Series(0, index=combined.index)
-        previous_signals = pd.Series(0, index=signals.keys())  # Track previous positions for trade detection
+        # NB: dtype float64 — assigning float returns to an int64 Series raises
+        # TypeError on pandas 2.x+.
+        portfolio_returns = pd.Series(0.0, index=combined.index, dtype='float64')
+        previous_signals = pd.Series(0.0, index=signals.keys(), dtype='float64')  # Track previous positions for trade detection
 
         for date in combined.index:
             daily_signals = combined.loc[date]

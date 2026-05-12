@@ -1,0 +1,308 @@
+{
+  "TSLA": {
+    "total_return": 0.49606370844635483,
+    "annualized_return": 0.12421802597244236,
+    "sharpe_ratio": 0.6867236988889398,
+    "win_rate": 0.5164319248826291,
+    "max_drawdown": -0.22085127914699537,
+    "total_trades": "213",
+    "volatility": 0.1808850141234626,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "NVDA": {
+    "total_return": 0.8272795628146183,
+    "annualized_return": 0.19150417935568131,
+    "sharpe_ratio": 1.0168345345575198,
+    "win_rate": 0.5473251028806584,
+    "max_drawdown": -0.1929426440657811,
+    "total_trades": "486",
+    "volatility": 0.18833366968502424,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "AAPL": {
+    "total_return": 0.25614777362299956,
+    "annualized_return": 0.06853050668083194,
+    "sharpe_ratio": 0.6499502458706437,
+    "win_rate": 0.532967032967033,
+    "max_drawdown": -0.1416386575540783,
+    "total_trades": "364",
+    "volatility": 0.10543961959585323,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "AMZN": {
+    "total_return": -0.25963195486949175,
+    "annualized_return": -0.08366559532552609,
+    "sharpe_ratio": -0.7325680339745786,
+    "win_rate": 0.4506578947368421,
+    "max_drawdown": -0.3255164559250396,
+    "total_trades": "304",
+    "volatility": 0.11420863516470257,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "META": {
+    "total_return": 0.2567918150946622,
+    "annualized_return": 0.068689713810268,
+    "sharpe_ratio": 0.5357896235380996,
+    "win_rate": 0.5433333333333333,
+    "max_drawdown": -0.15020828501967462,
+    "total_trades": "300",
+    "volatility": 0.12820276987947965,
+    "dominant_regime": "crisis",
+    "regime_distribution": {
+      "crisis": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "GOOGL": {
+    "total_return": 0.8316369750247175,
+    "annualized_return": 0.19232933085800208,
+    "sharpe_ratio": 1.3715043780152896,
+    "win_rate": 0.526595744680851,
+    "max_drawdown": -0.10694580236825903,
+    "total_trades": "376",
+    "volatility": 0.14023238564963442,
+    "dominant_regime": "crisis",
+    "regime_distribution": {
+      "crisis": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "AMD": {
+    "total_return": 0.11367151050076352,
+    "annualized_return": 0.031787594295777044,
+    "sharpe_ratio": 0.2193202731114822,
+    "win_rate": 0.5347222222222222,
+    "max_drawdown": -0.16654006100315363,
+    "total_trades": "288",
+    "volatility": 0.14493687174837305,
+    "dominant_regime": "crisis",
+    "regime_distribution": {
+      "crisis": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "MSFT": {
+    "total_return": 0.023175364853644354,
+    "annualized_return": 0.0066814438260536235,
+    "sharpe_ratio": 0.06510100429292125,
+    "win_rate": 0.47058823529411764,
+    "max_drawdown": -0.13641362790127398,
+    "total_trades": "238",
+    "volatility": 0.10263196241935903,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "SPY": {
+    "total_return": 0.5022653908816754,
+    "annualized_return": 0.12557057789822856,
+    "sharpe_ratio": 1.103381450381289,
+    "win_rate": 0.5645756457564576,
+    "max_drawdown": -0.09629076885001023,
+    "total_trades": "542",
+    "volatility": 0.11380522833226521,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "QQQ": {
+    "total_return": 0.9695440852792894,
+    "annualized_return": 0.21775404951848798,
+    "sharpe_ratio": 1.822555749388462,
+    "win_rate": 0.5789473684210527,
+    "max_drawdown": -0.1285397501242306,
+    "total_trades": "361",
+    "volatility": 0.11947730520262707,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "GME": {
+    "total_return": -0.31002616156294105,
+    "annualized_return": -0.10224981524671073,
+    "sharpe_ratio": -0.6366188018745099,
+    "win_rate": 0.5274390243902439,
+    "max_drawdown": -0.41331165498805866,
+    "total_trades": "328",
+    "volatility": 0.16061387905232835,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "BTC-USD": {
+    "total_return": 0.146912468082264,
+    "annualized_return": 0.027138882465913117,
+    "sharpe_ratio": 0.2512128366402622,
+    "win_rate": 0.4817073170731707,
+    "max_drawdown": -0.21617456434411966,
+    "total_trades": "328",
+    "volatility": 0.10803143194778739,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1543
+    },
+    "walk_forward_windows": 15,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1543
+  },
+  "ETH-USD": {
+    "total_return": -0.14525747969275216,
+    "annualized_return": -0.03019569667287536,
+    "sharpe_ratio": -0.2040391159049977,
+    "win_rate": 0.4627659574468085,
+    "max_drawdown": -0.29827747828727513,
+    "total_trades": "188",
+    "volatility": 0.1479897447062784,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1543
+    },
+    "walk_forward_windows": 15,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1543
+  },
+  "SOL-USD": {
+    "total_return": 1.049278648483511,
+    "annualized_return": 0.15045833791905383,
+    "sharpe_ratio": 0.717754462738104,
+    "win_rate": 0.4966216216216216,
+    "max_drawdown": -0.12129675719180055,
+    "total_trades": "296",
+    "volatility": 0.20962368850356203,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1543
+    },
+    "walk_forward_windows": 15,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1543
+  },
+  "TLT": {
+    "total_return": -0.09898102601385828,
+    "annualized_return": -0.029840631386064742,
+    "sharpe_ratio": -0.2760307110674846,
+    "win_rate": 0.5069252077562327,
+    "max_drawdown": -0.24090288806791757,
+    "total_trades": "361",
+    "volatility": 0.10810620046828498,
+    "dominant_regime": "ranging",
+    "regime_distribution": {
+      "ranging": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "VOO": {
+    "total_return": 0.2760327981213089,
+    "annualized_return": 0.0734196236767175,
+    "sharpe_ratio": 0.7170860871613901,
+    "win_rate": 0.5965665236051502,
+    "max_drawdown": -0.14089949001000618,
+    "total_trades": "233",
+    "volatility": 0.1023860663192499,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "SCHD": {
+    "total_return": -0.2201038327826903,
+    "annualized_return": -0.06970713804987339,
+    "sharpe_ratio": -0.6659610670181619,
+    "win_rate": 0.46124031007751937,
+    "max_drawdown": -0.2934008220309539,
+    "total_trades": "258",
+    "volatility": 0.10467149132604227,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  },
+  "TQQQ": {
+    "total_return": 0.5041863658136128,
+    "annualized_return": 0.12598872813437656,
+    "sharpe_ratio": 0.739751917384504,
+    "win_rate": 0.5637583892617449,
+    "max_drawdown": -0.19970078577786218,
+    "total_trades": "298",
+    "volatility": 0.1703121346137598,
+    "dominant_regime": "bull",
+    "regime_distribution": {
+      "bull": 1043
+    },
+    "walk_forward_windows": 14,
+    "ml_available": true,
+    "advanced_features": true,
+    "data_points": 1043
+  }
+}

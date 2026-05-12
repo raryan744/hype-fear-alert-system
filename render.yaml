@@ -43,6 +43,8 @@ services:
         sync: false
       - key: POLYGON_API_KEY
         sync: false
+      - key: GITHUB_TOKEN
+        sync: false      # used by github_push.py to commit daily data snapshot
     disk:
       name: hype-fear-state
       mountPath: /var/data

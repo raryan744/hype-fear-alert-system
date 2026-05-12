@@ -18,8 +18,11 @@ env/
 # Local runtime state (cooldown/history JSON — lives on Render disk in prod)
 state/
 
-# Generated backtest output
+# Generated backtest output (most are scratch — the per-ticker results table is
+# committed because signal_enrichment.py loads it at runtime for forward-edge
+# lookups).
 backtest_results_*.txt
 backtest_results_*.json
+!backtest_results_per_ticker.json
 threshold_suggestions.json
 

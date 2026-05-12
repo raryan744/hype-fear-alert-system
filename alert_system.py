@@ -32,6 +32,8 @@ import yfinance as yf
 
 from grok_sentiment import get_live_sentiment, format_sentiment_message
 from obsidian_logger import log_sentiment_scan, log_alert, log_session_summary, ensure_daily_note
+from signal_enrichment import enrich, format_enrichment_block
+import signal_logger
 
 logging.basicConfig(
     level=logging.INFO,
@@ -320,11 +322,17 @@ class AlertEngine:
         if confidence < CONFIDENCE_MIN:
             return None
 
-        if composite >= HYPE_THRESHOLD and not self._in_cooldown(ticker, "hype"):
+        # Per-asset threshold overrides (set in profiles.json based on backtest
+        # Sharpe — loss-makers get a higher bar so only strongest signals fire).
+        profile = self.profiles.get(ticker, {})
+        hype_thresh = profile.get("hype_threshold", HYPE_THRESHOLD)
+        fear_thresh = profile.get("fear_threshold", FEAR_THRESHOLD)
+
+        if composite >= hype_thresh and not self._in_cooldown(ticker, "hype"):
             direction = "HYPE 🚀"
             emoji     = "📈"
             alert_type = "hype"
-        elif composite <= FEAR_THRESHOLD and not self._in_cooldown(ticker, "fear"):
+        elif composite <= fear_thresh and not self._in_cooldown(ticker, "fear"):
             direction = "FEAR 🔻"
             emoji     = "📉"
             alert_type = "fear"
@@ -336,12 +344,30 @@ class AlertEngine:
         bars = int(abs(composite) * 10)
         bar  = ("🟢" if composite > 0 else "🔴") * bars + "⬜" * (10 - bars)
 
+        # Enrich with price, expected move, historical edge, option suggestion.
+        # Re-use the cached price history from _cached_download to avoid an
+        # extra yfinance call.
+        try:
+            price_history = _cached_download(ticker)
+            if isinstance(price_history.columns, pd.MultiIndex):
+                price_history.columns = price_history.columns.get_level_values(0)
+            enriched = enrich(ticker, composite, price_history)
+            scores["enrichment"] = enriched
+            enrich_block = format_enrichment_block(enriched)
+        except Exception as e:
+            logger.warning(f"Enrichment failed for {ticker}: {e}")
+            enrich_block = ""
+
         msg = (
             f"{emoji} *{ticker} {direction}*\n"
             f"{bar}\n"
             f"Composite: `{composite:+.3f}`  Confidence: `{confidence:.0%}`\n"
             f"Tech: `{scores['tech_signal']:+.2f}`  Grok: `{scores['grok_score']:+.2f}`\n"
             f"Regime: `{regime.upper()}`\n"
+        )
+        if enrich_block:
+            msg += enrich_block + "\n"
+        msg += (
             f"_{scores['summary']}_\n"
             f"`{scores['timestamp'][:19]} UTC`"
         )
@@ -351,6 +377,9 @@ class AlertEngine:
         """Scan all assets and return list of alert messages fired."""
         from grok_sentiment import get_live_sentiment_batch
         logger.info(f"Scanning {len(watchlist)} assets...")
+
+        scan_start = time.time()
+        run_id = signal_logger.start_run(len(watchlist))
 
         grok_results = get_live_sentiment_batch(watchlist, delay_secs=0.3)
 
@@ -368,12 +397,24 @@ class AlertEngine:
                 f"conf={scores['confidence']:.0%} regime={scores['regime']}"
             )
 
+            # Persist the scan row (price is filled by evaluate() if it fires)
+            try:
+                cached = _price_cache.get(ticker)
+                price = float(cached[1]["Close"].iloc[-1]) if cached else None
+                signal_logger.log_scan_row(run_id, ticker, scores, price=price)
+            except Exception as e:
+                logger.warning(f"signal_logger.log_scan_row failed: {e}")
+
             alert_msg = self.evaluate(ticker, scores)
             if alert_msg:
-                direction = "HYPE" if scores["composite"] > 0 else "FEAR"
+                direction = "hype" if scores["composite"] > 0 else "fear"
                 logger.info(f"ALERT: {ticker}")
                 send_telegram(alert_msg)
-                log_alert(ticker, direction, scores, alert_msg)
+                log_alert(ticker, direction.upper(), scores, alert_msg)
+                try:
+                    signal_logger.log_alert_row(ticker, direction, scores, alert_msg)
+                except Exception as e:
+                    logger.warning(f"signal_logger.log_alert_row failed: {e}")
                 alerts_fired.append(alert_msg)
                 self.alert_history.append({
                     "ticker": ticker,
@@ -384,6 +425,8 @@ class AlertEngine:
 
         if alerts_fired:
             self._save_history()
+
+        signal_logger.finish_run(run_id, len(alerts_fired), time.time() - scan_start)
 
         # Log full scan to Obsidian daily note (best-effort)
         try:
@@ -427,6 +470,8 @@ def run_loop() -> None:
     engine     = AlertEngine()
     scan_count = 0
     all_alerts: List[str] = []
+    last_outcome_score_day = None
+    last_github_push_day   = None
 
     while not _shutdown:
         scan_count += 1
@@ -451,6 +496,27 @@ def run_loop() -> None:
                                     [x["ticker"] for x in top[:3]])
             except Exception as e:
                 logger.warning(f"Session summary log failed: {e}")
+
+        # Daily tasks — outcome scoring + github push, run once per UTC day
+        today_key = datetime.utcnow().strftime("%Y-%m-%d")
+        if last_outcome_score_day != today_key:
+            try:
+                import signal_logger
+                n = signal_logger.score_pending_outcomes()
+                if n:
+                    logger.info(f"Scored {n} pending alert outcomes")
+                last_outcome_score_day = today_key
+            except Exception as e:
+                logger.warning(f"Outcome scoring failed: {e}")
+
+        if last_github_push_day != today_key and datetime.utcnow().hour >= 3:
+            try:
+                import github_push
+                rc = github_push.push()
+                if rc == 0:
+                    last_github_push_day = today_key
+            except Exception as e:
+                logger.warning(f"GitHub push failed: {e}")
 
         if _shutdown:
             break
