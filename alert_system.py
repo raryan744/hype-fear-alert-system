@@ -20,6 +20,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -473,6 +474,23 @@ def run_loop() -> None:
     last_outcome_score_day = None
     last_github_push_day   = None
 
+    # Start EDGAR listener thread (independent of hype/fear alerts).
+    # Safe-toggleable via EDGAR_DISABLED=1 in case SEC is unreachable etc.
+    edgar_stop = threading.Event()
+    edgar_thread = None
+    if os.getenv("EDGAR_DISABLED", "0") != "1":
+        try:
+            import edgar_listener
+            edgar_thread = threading.Thread(
+                target=edgar_listener.listener_thread,
+                args=(WATCHLIST, send_telegram, edgar_stop),
+                name="edgar-listener",
+                daemon=True,
+            )
+            edgar_thread.start()
+        except Exception as e:
+            logger.warning(f"Could not start EDGAR listener: {e}")
+
     while not _shutdown:
         scan_count += 1
         logger.info(f"=== Scan #{scan_count} — {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')} ===")
@@ -523,6 +541,10 @@ def run_loop() -> None:
         logger.info(f"Sleeping {SCAN_INTERVAL_SECS}s until next scan...")
         _interruptible_sleep(SCAN_INTERVAL_SECS)
 
+    # Stop the EDGAR listener thread cleanly
+    edgar_stop.set()
+    if edgar_thread is not None:
+        edgar_thread.join(timeout=5)
     logger.info("Shutdown complete.")
 
 

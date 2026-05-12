@@ -98,6 +98,38 @@ CREATE TABLE IF NOT EXISTS outcomes (
     correct_5d    INTEGER,                  -- 1 if return aligns with signal direction
     notes         TEXT
 );
+
+-- SEC EDGAR filings observed by edgar_listener.py. Stored independently of
+-- hype/fear alerts so they can be analysed and (later, in Phase D) merged
+-- as features into the calibration model.
+CREATE TABLE IF NOT EXISTS sec_events (
+    event_id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    filed_at           TEXT NOT NULL,
+    seen_at            TEXT NOT NULL,
+    ticker             TEXT NOT NULL,
+    cik                TEXT,
+    form_type          TEXT NOT NULL,        -- '4', '13D', '13G', '8-K'
+    accession_no       TEXT UNIQUE,          -- de-dupe key
+    filing_url         TEXT,
+    item_codes         TEXT,                 -- comma-separated 8-K items
+    insider_name       TEXT,
+    insider_role       TEXT,
+    transaction_code   TEXT,                 -- P (open-market buy), S (sale), A (award), etc.
+    shares             REAL,
+    price              REAL,
+    dollar_value       REAL,
+    pct_of_holdings    REAL,
+    cluster_size_5d    INTEGER,              -- distinct insiders trading in last 5d
+    is_first_time      INTEGER,
+    is_post_decline    INTEGER,              -- stock ≥20% below YTD high
+    strength_score     REAL,                 -- 0–1 heuristic for alert priority
+    alerted            INTEGER DEFAULT 0,    -- 1 if Telegram fired
+    raw_summary        TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sec_filed   ON sec_events(filed_at);
+CREATE INDEX IF NOT EXISTS idx_sec_ticker  ON sec_events(ticker);
+CREATE INDEX IF NOT EXISTS idx_sec_form    ON sec_events(form_type);
 """
 
 
@@ -308,6 +340,83 @@ def score_pending_outcomes(max_days_back: int = 30) -> int:
 # Summary helpers (for dashboard, github_push, ad-hoc queries)
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# SEC events
+# ---------------------------------------------------------------------------
+
+def already_seen(accession_no: str) -> bool:
+    """Cheap de-dupe check before doing expensive parsing on a known filing."""
+    if not accession_no:
+        return False
+    with _lock, _connect() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM sec_events WHERE accession_no = ? LIMIT 1",
+            (accession_no,),
+        ).fetchone()
+        return row is not None
+
+
+def log_sec_event(event: Dict) -> Optional[int]:
+    """Insert a parsed SEC event row. Returns event_id, or None if duplicate."""
+    cols = (
+        "filed_at", "seen_at", "ticker", "cik", "form_type", "accession_no",
+        "filing_url", "item_codes", "insider_name", "insider_role",
+        "transaction_code", "shares", "price", "dollar_value", "pct_of_holdings",
+        "cluster_size_5d", "is_first_time", "is_post_decline", "strength_score",
+        "alerted", "raw_summary",
+    )
+    placeholders = ", ".join("?" for _ in cols)
+    values = tuple(event.get(c) for c in cols)
+    try:
+        with _lock, _connect() as conn:
+            cur = conn.execute(
+                f"INSERT INTO sec_events ({', '.join(cols)}) VALUES ({placeholders})",
+                values,
+            )
+            return cur.lastrowid
+    except sqlite3.IntegrityError:
+        # Duplicate accession_no — fine, just skip.
+        return None
+
+
+def cluster_size_5d(ticker: str) -> int:
+    """How many distinct insiders have transacted on this ticker in last 5d?"""
+    with _lock, _connect() as conn:
+        row = conn.execute(
+            """
+            SELECT COUNT(DISTINCT insider_name)
+            FROM sec_events
+            WHERE ticker = ?
+              AND form_type = '4'
+              AND insider_name IS NOT NULL
+              AND filed_at > datetime('now', '-5 days')
+            """,
+            (ticker,),
+        ).fetchone()
+        return int(row[0] or 0)
+
+
+def is_first_time_buyer(ticker: str, insider_name: str) -> bool:
+    """True if this insider has not bought this ticker before in our DB."""
+    if not insider_name:
+        return False
+    with _lock, _connect() as conn:
+        row = conn.execute(
+            """
+            SELECT 1 FROM sec_events
+            WHERE ticker = ? AND insider_name = ? AND transaction_code = 'P'
+            LIMIT 1
+            """,
+            (ticker, insider_name),
+        ).fetchone()
+        return row is None
+
+
+def mark_alerted(event_id: int) -> None:
+    with _lock, _connect() as conn:
+        conn.execute("UPDATE sec_events SET alerted = 1 WHERE event_id = ?", (event_id,))
+
+
 def summary() -> Dict:
     with _lock, _connect() as conn:
         def c(q): return conn.execute(q).fetchone()[0]
@@ -324,5 +433,15 @@ def summary() -> Dict:
             "alerts_last_24h": c(
                 "SELECT COUNT(*) FROM alerts "
                 "WHERE fired_at > datetime('now','-1 day')"
+            ),
+            "sec_events":         c("SELECT COUNT(*) FROM sec_events"),
+            "sec_events_24h":     c(
+                "SELECT COUNT(*) FROM sec_events "
+                "WHERE filed_at > datetime('now','-1 day')"
+            ),
+            "sec_form4_buys_24h": c(
+                "SELECT COUNT(*) FROM sec_events "
+                "WHERE form_type='4' AND transaction_code='P' "
+                "AND filed_at > datetime('now','-1 day')"
             ),
         }
