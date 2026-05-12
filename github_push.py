@@ -102,7 +102,9 @@ def push() -> int:
         _run(["git", "config", "user.email", "hype-fear-bot@noreply"], cwd=tmp)
         _run(["git", "config", "user.name",  "hype-fear-bot"],          cwd=tmp)
 
-        _run(["git", "add", "data/"], cwd=tmp)
+        # -f because the repo's .gitignore has `*.db` which would otherwise
+        # silently exclude data/hype_fear.db. We want this specific DB tracked.
+        _run(["git", "add", "-f", "data/"], cwd=tmp)
         status = _run(["git", "status", "--porcelain"], cwd=tmp).stdout.strip()
         if not status:
             logger.info("No changes to commit.")
