@@ -184,13 +184,27 @@ def suggest_option(ticker: str, current_price: float, composite: float,
             return {}
         c = candidates[0]
 
-        # Try to fetch last quote (free tier may not include this in real-time)
+        # Try last-trade first (requires higher tier). Fall back to previous-day
+        # close aggregate, which is available on lower tiers.
         last_price = None
         try:
             quote = client.get_last_trade(c.ticker)
             last_price = float(getattr(quote, "price", None) or 0) or None
         except Exception:
             pass
+        if last_price is None:
+            # Walk back up to 10 trading days — OTM weeklies often have no
+            # prior-day print, but usually have *some* recent bar.
+            try:
+                end   = datetime.utcnow().date()
+                start = end - timedelta(days=10)
+                aggs = list(client.list_aggs(c.ticker, 1, "day",
+                                              start.isoformat(), end.isoformat(),
+                                              limit=10))
+                if aggs:
+                    last_price = float(getattr(aggs[-1], "close", None) or 0) or None
+            except Exception:
+                pass
 
         breakeven = (c.strike_price + (last_price or 0)) if contract_type == "call" \
                     else (c.strike_price - (last_price or 0))
