@@ -1,13 +1,13 @@
 {
   "db_path": "/var/data/hype_fear.db",
-  "scan_runs": 117,
-  "scans": 2052,
-  "alerts": 40,
+  "scan_runs": 118,
+  "scans": 2070,
+  "alerts": 41,
   "outcomes": 0,
   "win_rate_5d": null,
-  "alerts_last_24h": 40,
+  "alerts_last_24h": 41,
   "sec_events": 0,
   "sec_events_24h": 0,
   "sec_form4_buys_24h": 0,
-  "generated_at": "2026-05-13T13:57:40.171448"
+  "generated_at": "2026-05-13T14:05:03.072335"
 }
