@@ -88,18 +88,45 @@ db_path, db_source = resolve_db_path()
 # Controls row
 c1, c2, c3, c4 = st.columns([2, 2, 2, 6])
 
+def _read_token() -> str:
+    """Look for GITHUB_TOKEN in env, then in .env, then in Markets/.env."""
+    import os
+    if os.getenv("GITHUB_TOKEN"):
+        return os.getenv("GITHUB_TOKEN")
+    for env_path in [REPO_DIR / ".env",
+                     Path.home() / "Documents/GitHub/Markets/.env"]:
+        if not env_path.exists():
+            continue
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line.startswith("GITHUB_TOKEN="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return ""
+
+
 if c1.button("🔄 Pull from GitHub", use_container_width=True):
-    with st.spinner("git pull..."):
-        result = subprocess.run(
-            ["git", "pull", "--ff-only"],
-            cwd=str(REPO_DIR), capture_output=True, text=True,
-        )
-        if result.returncode == 0:
-            st.success(result.stdout.strip() or "Up to date")
-            # Bust the cache so the next render sees the new file
-            st.cache_data.clear()
-        else:
-            st.error(result.stderr.strip() or "git pull failed")
+    token = _read_token()
+    if not token:
+        st.error("GITHUB_TOKEN not found in env or .env files")
+    else:
+        url = f"https://x-access-token:{token}@github.com/raryan744/hype-fear-alert-system.git"
+        with st.spinner("git pull..."):
+            try:
+                result = subprocess.run(
+                    ["git", "pull", "--ff-only", url, "main"],
+                    cwd=str(REPO_DIR),
+                    capture_output=True, text=True, timeout=30,
+                )
+                if result.returncode == 0:
+                    # Redact any echoed token before showing
+                    out = (result.stdout or result.stderr).replace(token, "***")
+                    st.success(out.strip() or "Up to date")
+                    st.cache_data.clear()
+                else:
+                    err = (result.stderr or result.stdout).replace(token, "***")
+                    st.error(err.strip() or "git pull failed")
+            except subprocess.TimeoutExpired:
+                st.error("git pull timed out after 30s")
         time.sleep(0.8)
         st.rerun()
 
